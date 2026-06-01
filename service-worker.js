@@ -2,19 +2,12 @@
   'use strict';
 
   var filesToCache = [
-    './css/style.css',
-    './css/bootstrap.css',
-    './img/header-bg.jpg',
-    './img/header-bg.jpg',
-    './js/jquery.min.js',
-    './js/jquery.1.11.1.js',
-    './fonts/open-sans/OpenSans-Regular.ttf',
-    './fonts/lato/Lato-Regular.ttf',
+    './css/hmr.css',
     './offline.html',
     './index.html'
   ];
 
-  var staticCacheName = 'offline-application-cache-v1';
+  var staticCacheName = 'offline-application-cache-v2';
 
   self.addEventListener('install', function(event) {
     console.log('Installing service worker');
