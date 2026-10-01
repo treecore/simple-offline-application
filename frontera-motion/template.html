@@ -1,0 +1,738 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Frontera Motion</title>
+<meta name="viewport" content="width=1440">
+<style>
+@font-face{font-family:'Inter Tight';src:url(data:font/woff2;base64,__INTERTIGHT__) format('woff2');font-weight:100 900;font-display:block}
+@font-face{font-family:'Inter';src:url(data:font/woff2;base64,__INTER__) format('woff2');font-weight:100 900;font-display:block}
+:root{
+  --canvas:#DFEAFD; --ink:#0A0A0A; --ink2:#363A40; --mute:#737373; --faint:#8B9198;
+  --line:#D6E0EF; --line2:#E6ECF5; --fill:#F2F5FA; --accent:#0D6AF3; --accentSoft:#DEEBFE; --dark:#0B0F17;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1440px;height:1080px;background:var(--canvas);overflow:hidden}
+body{font-family:'Inter',sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased;font-feature-settings:"cv11","ss01","tnum"}
+#stage{position:absolute;left:0;top:0;width:1440px;height:1080px;overflow:hidden;background:var(--canvas)}
+#world{position:absolute;left:0;top:0;transform-origin:0 0}
+.w{position:absolute;left:0;top:0}
+.tt{font-family:'Inter Tight',sans-serif;letter-spacing:-.015em}
+svg.i{display:block;flex:none;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+
+#hero{position:absolute;left:0;top:0;overflow:hidden;border:1px solid var(--line);z-index:2}
+.layer{position:absolute;left:50%;top:50%}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px}
+.ibox{width:32px;height:32px;border-radius:9px;background:var(--fill);display:flex;align-items:center;justify-content:center;color:var(--ink);flex:none}
+.ibox.dk{background:var(--ink);color:#fff}
+.t14{font-size:14px;font-weight:500;line-height:18px}
+.t13{font-size:13px;line-height:17px}
+.mute{color:var(--mute)} .faint{color:var(--faint)}
+.row{display:flex;align-items:center;gap:12px}
+.btn{display:flex;align-items:center;gap:6px;height:32px;padding:0 14px;border-radius:9px;font-size:13px;font-weight:500;white-space:nowrap}
+.btn.dk{background:var(--ink);color:#fff}
+.btn.ol{border:1px solid var(--line);background:#fff;color:var(--ink)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:7px;font-size:12px;font-weight:500;white-space:nowrap}
+.chip.ol{border:1px solid var(--line);background:#fff;color:var(--ink2)}
+.chip.dk{background:var(--ink);color:#fff}
+.chip.ac{background:var(--accentSoft);color:var(--accent)}
+.abs{position:absolute}
+
+/* fragments */
+.frag{position:absolute;left:0;top:0;display:flex;align-items:center;gap:12px;padding:12px 16px 12px 12px;background:#fff;border:1px solid var(--line);border-radius:14px;white-space:nowrap;box-shadow:0 1px 2px rgba(16,40,90,.05),0 8px 24px -8px rgba(16,40,90,.12)}
+/* cursor */
+#cursor{position:absolute;left:0;top:0;z-index:50;transform-origin:3px 2px}
+#caps{position:absolute;left:0;top:928px;width:1440px;height:80px;z-index:40}
+.cap{position:absolute;left:0;top:0;width:1440px;text-align:center;font-family:'Inter Tight',sans-serif;font-weight:500;font-size:31px;line-height:40px;letter-spacing:-.02em;color:var(--ink)}
+
+/* agent tabs + switcher */
+.seg{position:absolute;height:36px;border-radius:10px;background:var(--fill)}
+.segInd{position:absolute;top:3px;height:30px;border-radius:8px;background:#fff;box-shadow:0 1px 2px rgba(16,40,90,.10),0 0 0 1px rgba(16,40,90,.05)}
+.segT{position:absolute;top:0;height:36px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500}
+#switch{position:absolute;left:0;top:0;height:44px;border-radius:12px;background:#fff;border:1px solid var(--line);z-index:3}
+#swInd{position:absolute;top:5px;height:32px;border-radius:8px;background:var(--ink)}
+.swT{position:absolute;top:0;height:42px;display:flex;align-items:center;justify-content:center;gap:7px;font-size:14px;font-weight:500}
+
+/* workflow */
+.node{position:absolute;width:172px;height:64px;background:#fff;border:1px solid var(--line);border-radius:12px;display:flex;align-items:center;gap:10px;padding:0 12px;box-shadow:0 1px 2px rgba(16,40,90,.05)}
+.node .ibox{width:30px;height:30px;border-radius:8px}
+.node b{display:block;font-size:13px;font-weight:600;line-height:16px;white-space:nowrap}
+.node span{display:block;font-size:11.5px;line-height:15px;color:var(--mute);white-space:nowrap}
+.port{position:absolute;width:9px;height:9px;border-radius:50%;background:#fff;border:1.5px solid var(--ink2)}
+.badge{position:absolute;right:-7px;top:-7px;width:18px;height:18px;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center}
+.plus{position:absolute;width:22px;height:22px;border-radius:50%;background:#fff;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--ink)}
+.elabel{position:absolute;font-size:11px;font-weight:500;color:var(--mute);background:#fff;border:1px solid var(--line2);border-radius:5px;padding:1px 6px}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="world">
+    <div id="frags"></div>
+    <div id="hero"></div>
+    <div id="chip" class="w" style="z-index:4"></div>
+    <div id="switch"></div>
+    <div id="endWord" class="w tt" style="font-weight:600;font-size:84px;line-height:96px;letter-spacing:-.03em;white-space:nowrap">Frontera</div>
+    <div id="endTag" class="w" style="font-size:24px;line-height:32px;color:var(--ink2);white-space:nowrap">Build intelligence into the way work gets done.</div>
+  </div>
+  <div id="caps"></div>
+  <svg id="cursor" width="28" height="32" viewBox="0 0 28 32"><path d="M3 2 L3 24.5 L8.6 19.4 L12.4 28.2 L16.3 26.5 L12.6 17.9 L20.2 17.6 Z" fill="#0A0A0A" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>
+</div>
+<script>
+'use strict';
+/* ───────── grid ───────── */
+const BPM = __BPM__, OFF = __OFF__, BEAT = 60 / BPM, DUR = 24 * 4 * BEAT;
+const B = (bar, beat = 1) => OFF + ((bar - 1) * 4 + (beat - 1)) * BEAT;
+const MARK = 'data:image/png;base64,__MARK__';
+const SCX = 720, SCY = 468;
+
+/* ───────── springs: closed-form step responses ───────── */
+function S(dt, w = 14, z = .86) {
+  if (dt <= 0) return 0;
+  if (z >= 1) { const e = Math.exp(-w * dt); return 1 - e * (1 + w * dt); }
+  const wd = w * Math.sqrt(1 - z * z), e = Math.exp(-z * w * dt);
+  return 1 - e * (Math.cos(wd * dt) + (z * w / wd) * Math.sin(wd * dt));
+}
+/* a value that changes target many times = sum of one spring per change */
+function track(v0, w = 14, z = .86) {
+  const keys = [];
+  const f = t => { let v = v0, p = v0; for (const k of keys) { v += (k[1] - p) * S(t - k[0], k[2] || w, k[3] || z); p = k[1]; } return v; };
+  f.to = (t, v, kw, kz) => { keys.push([t, v, kw, kz]); return f; };
+  f.keys = keys; return f;
+}
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, p) => a + (b - a) * p;
+const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+/* visibility over intervals: enter spring, fast exit */
+function V(t, ivs, win = 20, wout = 34) {
+  let m = 0;
+  for (const [a, b] of ivs) { const e = a == null ? 1 : S(t - a, win, 1), x = b == null ? 0 : S(t - b, wout, 1); m = Math.max(m, e * (1 - x)); }
+  return m;
+}
+function show(el, p, base = '', dy = 0, sc = 0, blur = 7) {
+  const s = el.style, b = (1 - p) * blur;
+  s.opacity = p.toFixed(4); s.visibility = p < .002 ? 'hidden' : 'visible';
+  s.filter = b > .05 ? `blur(${b.toFixed(2)}px)` : 'none';
+  if (base || dy || sc) s.transform = `${base} translateY(${((1 - p) * dy).toFixed(2)}px) scale(${(1 - (1 - p) * sc).toFixed(4)})`;
+}
+/* press pulse 0→1→0 around a click */
+const pulse = (t, tc, hold = .09) => S(t - (tc - .045), 42, 1) - S(t - (tc + hold), 24, .9);
+const typed = (t, s, t0, t1) => s.slice(0, Math.floor(clamp((t - t0) / (t1 - t0)) * s.length + 1e-6));
+
+/* ───────── icons (one stroke, 24 grid) ───────── */
+const IP = {
+  plus: '<path d="M12 5v14M5 12h14"/>', check: '<path d="M20 6 9 17l-5-5"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
+  spark: '<path d="M12 3.5l1.9 5.6 5.6 1.9-5.6 1.9L12 18.5l-1.9-5.6L4.5 11l5.6-1.9z"/>',
+  flow: '<rect x="3" y="3" width="8" height="8" rx="2"/><path d="M7 11v4a2 2 0 0 0 2 2h4"/><rect x="13" y="13" width="8" height="8" rx="2"/>',
+  apps: '<rect x="3.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.6"/>',
+  box: '<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="M3.3 7 12 12l8.7-5M12 22V12"/>',
+  file: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>',
+  msg: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
+  ticket: '<path d="M3 9a3 3 0 0 0 0 6v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2z"/><path d="M13 5v2M13 11v2M13 17v2"/>',
+  cal: '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2.5v3M8 2.5v3M3 10h18"/>',
+  sheet: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/>',
+  hour: '<path d="M6 2.5h12M6 21.5h12M7 2.5v3.7c0 .5.2 1 .6 1.4L12 12l4.4-4.4c.4-.4.6-.9.6-1.4V2.5M7 21.5v-3.7c0-.5.2-1 .6-1.4L12 12l4.4 4.4c.4.4.6.9.6 1.4v3.7"/>',
+  zap: '<path d="M13 2 4 14h8l-1 8 9-12h-8z"/>',
+  split: '<path d="M16 3h5v5M8 3H3v5M12 22v-8.3a4 4 0 0 0-1.2-2.8L3 3M21 3l-7.8 7.8"/>',
+  db: '<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>',
+  user: '<circle cx="9" cy="7" r="4"/><path d="M2 21v-1.5A4.5 4.5 0 0 1 6.5 15h5a4.5 4.5 0 0 1 4.5 4.5V21M16 11l2 2 4-4"/>',
+  up: '<path d="M12 19V5M5.5 11.5 12 5l6.5 6.5"/>', code: '<path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/>',
+  phone: '<rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M11 18.5h2"/>',
+  play: '<path d="M7 4.5v15l12-7.5z"/>', layers: '<path d="M12 2.5 2.5 7.5 12 12.5l9.5-5z"/><path d="m2.5 12 9.5 5 9.5-5M2.5 16.5l9.5 5 9.5-5"/>',
+  chev: '<path d="m9 18 6-6-6-6"/>', back: '<path d="m15 18-6-6 6-6"/>', pen: '<path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+  eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  upload: '<path d="M12 15V3M7 8l5-5 5 5M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/>',
+  link: '<path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/>',
+  flag: '<path d="M4 22V4M4 4h13l-2 4 2 4H4"/>',
+};
+const ic = (n, s = 16, extra = '') => `<svg class="i" ${extra} width="${s}" height="${s}" viewBox="0 0 24 24">${IP[n]}</svg>`;
+
+/* ───────── DOM ───────── */
+const $ = id => document.getElementById(id);
+const hero = $('hero');
+const LAY = {};
+function layer(key, w, h, cx, cy, html, style = '') {
+  const d = document.createElement('div');
+  d.className = 'layer'; d.id = 'L_' + key;
+  d.style.cssText = `width:${w}px;height:${h}px;margin-left:${-w / 2}px;margin-top:${-h / 2}px;${style}`;
+  d.innerHTML = html; hero.appendChild(d);
+  LAY[key] = { el: d, w, h, cx, cy };
+  return d;
+}
+/* world anchor of an element inside a layer */
+function A(id, fx = .5, fy = .5) {
+  let el = $(id), x = 0, y = 0;
+  const w = el.offsetWidth, h = el.offsetHeight;
+  while (el && !(el.id && el.id.startsWith('L_'))) { x += el.offsetLeft; y += el.offsetTop; el = el.offsetParent; }
+  const L = LAY[el.id.slice(2)];
+  return [L.cx - L.w / 2 + x + w * fx, L.cy - L.h / 2 + y + h * fy];
+}
+
+/* 0 · mark tile (first frame = last frame) */
+layer('mark', 120, 120, 0, 0, `<img src="${MARK}" style="position:absolute;left:50%;top:50%;width:56%;transform:translate(-50%,-50%)">`, 'width:100%;height:100%;left:0;top:0;margin:0');
+
+/* 1 · fragments */
+const FR = [
+  ['file', 'Payout_Policy_v3.pdf', 'Shared in #finance-ops', -430, -255, B(1, 2)],
+  ['msg', 'Can someone check yesterday’s payouts?', 'Chat · 4 replies', 330, -300, B(1, 2)],
+  ['sheet', 'payouts_0930.xlsx', '1,284 rows · 3 mismatches', -470, 20, B(1, 3)],
+  ['mail', 'Re: Vendor invoice mismatch', 'Inbox · Procurement', 430, 40, B(1, 3)],
+  ['ticket', '#4821 Delivery delayed', 'Support queue', -310, 290, B(1, 4)],
+  ['cal', 'Exception review', 'Today · 14:00', 360, 285, B(1, 4)],
+];
+$('frags').innerHTML = FR.map((f, i) => `<div class="frag" id="fr${i}"><div class="ibox">${ic(f[0], 16)}</div><div><div class="t14">${f[1]}</div><div class="t13 mute" style="margin-top:2px">${f[2]}</div></div></div>`).join('');
+
+/* 2 · ask bar */
+layer('bar', 560, 64, 0, 0, `
+  <div class="row" style="position:absolute;left:22px;top:0;height:64px;gap:12px;color:var(--ink)">${ic('search', 20)}
+    <span id="barPh" class="tt" style="position:absolute;left:32px;font-size:20px;color:var(--faint);white-space:nowrap">Ask Frontera…</span>
+    <span id="barTx" class="tt" style="position:absolute;left:32px;font-size:20px;white-space:nowrap"></span>
+    <span id="barCaret" style="position:absolute;top:21px;width:1.5px;height:23px;background:var(--ink)"></span></div>
+  <div style="position:absolute;right:16px;top:17px;height:30px;padding:0 9px;border-radius:7px;border:1px solid var(--line);font-size:13px;color:var(--mute);display:flex;align-items:center">⌘K</div>`);
+
+/* 3 · platform shell */
+const TILES = [
+  ['spark', 'Agents', 'Work with a named Agent over time.'],
+  ['apps', 'Apps', 'Bring data and AI into one workspace.'],
+  ['flow', 'Workflows', 'Connect systems, Agents and people.'],
+  ['box', 'Blueprint', 'Objects, relations, shared metrics.'],
+];
+layer('shell', 1000, 532, 0, 0, `
+  <div style="position:absolute;left:0;top:0;right:0;height:52px;border-bottom:1px solid var(--line2);display:flex;align-items:center;padding:0 20px;gap:10px;font-size:14px">
+    <img src="${MARK}" style="width:18px"><b style="font-weight:600">Frontera</b><span class="faint">/</span><span>General</span><span class="faint">/</span><span>Home</span>
+    <div style="margin-left:auto;display:flex;gap:10px;align-items:center">
+      <div class="row" style="height:32px;width:220px;padding:0 10px;border:1px solid var(--line);border-radius:9px;gap:8px;color:var(--faint);font-size:13px">${ic('search', 15)}Search…<span style="margin-left:auto;font-size:12px">⌘K</span></div>
+      <div class="btn ol">${ic('msg', 15)}Ask Frontera</div></div></div>
+  <div style="position:absolute;left:32px;top:72px">
+    <div class="t13 faint">Workspace: General</div>
+    <div class="tt" style="font-size:26px;font-weight:600;line-height:34px;margin-top:2px">Ways to work</div></div>
+  ${TILES.map((tl, i) => `
+  <div id="shTile${i}" style="position:absolute;left:${32 + (i % 2) * 468}px;top:${150 + Math.floor(i / 2) * 140}px;width:452px;height:124px">
+    <div id="shEmpty${i}" style="position:absolute;inset:0;border:1.5px dashed #C3D2EA;border-radius:14px">
+      <div id="shPlus${i}" class="plus" style="left:50%;top:50%;width:36px;height:36px;margin:-18px 0 0 -18px">${ic('plus', 18)}</div></div>
+    <div id="shFull${i}" class="card" style="position:absolute;inset:0;border-radius:14px;padding:20px">
+      <div class="ibox" style="width:40px;height:40px;border-radius:11px">${ic(tl[0], 20)}</div>
+      <div class="tt" style="position:absolute;left:76px;top:22px;font-size:18px;font-weight:600">${tl[1]}</div>
+      <div class="t13 mute" style="position:absolute;left:76px;top:47px">${tl[2]}</div>
+      <div id="shCh${i}" class="chip ac" style="position:absolute;left:20px;bottom:16px">${ic('link', 13)}Shared context</div></div>
+  </div>`).join('')}
+  <div id="shStrip" class="card" style="position:absolute;left:32px;top:432px;width:936px;height:72px;border-radius:14px;background:var(--fill);border-color:var(--line2)">
+    <div class="row" style="position:absolute;left:16px;top:16px"><div class="ibox dk" style="width:40px;height:40px;border-radius:11px">${ic('layers', 20)}</div>
+      <div><div class="tt" style="font-size:16px;font-weight:600">Shared foundation</div><div class="t13 mute">Blueprint · Knowledge · Connections · Policies</div></div></div>
+    <div id="shTog" style="position:absolute;right:18px;top:23px;width:46px;height:26px;border-radius:13px">
+      <div id="shKnob" style="position:absolute;top:3px;height:20px;border-radius:10px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.18)"></div></div>
+    <div id="shTogL" class="t13" style="position:absolute;right:76px;top:27px;font-weight:500"></div>
+  </div>`);
+
+/* 4 · agent */
+const AG_TABS = [['Instructions', 112], ['Knowledge', 106], ['Test', 66]];
+layer('agent', 760, 540, 0, 0, `
+  <div class="row" style="position:absolute;left:24px;top:20px">
+    <div class="ibox dk" style="width:40px;height:40px;border-radius:50%">${ic('spark', 19)}</div>
+    <div><div class="tt" style="font-size:18px;font-weight:600;line-height:22px">Operations agent</div><div class="t13 mute">Finance Ops · Exception handling</div></div></div>
+  <div class="chip ol" style="position:absolute;right:24px;top:27px">${ic('check', 13)}Published</div>
+  <div class="seg" style="left:24px;top:80px;width:${AG_TABS.reduce((a, b) => a + b[1], 0) + 6}px">
+    <div id="agInd" class="segInd"></div>
+    ${AG_TABS.map((tb, i) => `<div id="agT${i}" class="segT" style="left:${3 + AG_TABS.slice(0, i).reduce((a, b) => a + b[1], 0)}px;width:${tb[1]}px">${tb[0]}</div>`).join('')}</div>
+  <div style="position:absolute;left:0;right:0;top:131px;border-top:1px solid var(--line2)"></div>
+  <div id="agInstr" style="position:absolute;left:24px;top:156px;width:712px">
+    <div class="t13 faint">Goal</div>
+    <div style="font-size:16px;line-height:24px;margin-top:4px;color:var(--ink2)">Reconcile yesterday’s payouts against the settlement policy and flag exceptions for review.</div>
+    <div class="t13 faint" style="margin-top:22px">Authority</div>
+    ${[['eye', 'Read', 'Payouts, Records'], ['pen', 'Prepare', 'Exception report'], ['zap', 'Act', 'Ledger update · approval required']].map(r => `
+      <div class="row" style="height:48px;border-bottom:1px solid var(--line2)"><div class="ibox">${ic(r[0], 16)}</div><div class="t14" style="width:90px">${r[1]}</div><div class="t13 mute">${r[2]}</div></div>`).join('')}
+  </div>
+  <div id="agKnow" style="position:absolute;left:24px;top:148px;width:712px;height:380px">
+    <div class="row" style="height:28px"><div class="t14">Knowledge</div><div id="agKCount" class="t13 mute"></div></div>
+    ${[['Settlement_SOP.docx', 'Indexed · 128 passages'], ['Vendor_Terms_2026.pdf', 'Indexed · 64 passages']].map((r, i) => `
+      <div class="card row" style="position:absolute;left:0;top:${40 + i * 64}px;width:712px;height:56px;padding:0 14px"><div class="ibox">${ic('file', 16)}</div><div class="t14">${r[0]}</div>
+      <div class="t13 mute row" style="margin-left:auto;gap:6px">${ic('check', 14)}${r[1]}</div></div>`).join('')}
+    <div id="agDrop" style="position:absolute;left:0;top:168px;width:712px;height:72px;border:1.5px dashed #C3D2EA;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--mute);font-size:14px">${ic('upload', 17)}Drop files to ground this agent</div>
+  </div>
+  <div id="agTest" style="position:absolute;left:24px;top:148px;width:712px;height:380px">
+    <div id="agQ" style="position:absolute;right:0;top:4px;background:var(--ink);color:#fff;border-radius:14px 14px 4px 14px;padding:10px 14px;font-size:14px;white-space:nowrap">Which payouts breach the T+1 policy?</div>
+    ${['Searched knowledge · 3 sources', 'Read Records · 1,284 payouts', 'Flagged 3 exceptions'].map((s, i) => `
+      <div id="agS${i}" class="row" style="position:absolute;left:0;top:${62 + i * 28}px;gap:8px;font-size:13px;color:var(--ink2)">
+        <div style="position:relative;width:16px;height:16px"><div id="agSp${i}" style="position:absolute;inset:1px;border-radius:50%;border:1.5px solid var(--line);border-top-color:var(--ink)"></div>
+        <div id="agSc${i}" style="position:absolute;inset:0;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center">${ic('check', 11, 'style="stroke-width:2.2"')}</div></div>${s}</div>`).join('')}
+    <div id="agAns" style="position:absolute;left:0;top:160px;width:660px">
+      <div style="font-size:16px;line-height:25px;color:var(--ink)">3 payouts settled after T+1: <b style="font-weight:600">TX-20931</b>, <b style="font-weight:600">TX-20944</b> and <b style="font-weight:600">TX-21007</b>. Policy requires settlement by the next business day.</div>
+      <div class="row" style="gap:8px;margin-top:12px"><div id="agCite" class="chip ol"><b style="font-weight:600">1</b>Payout_Policy_v3.pdf · §4.2</div><div class="chip ol"><b style="font-weight:600">2</b>Settlement_SOP.docx</div></div></div>
+    <div class="card" style="position:absolute;left:0;top:324px;width:712px;height:48px;border-radius:12px">
+      <span id="agPh" style="position:absolute;left:16px;top:14px;font-size:14px;color:var(--faint);white-space:nowrap">Ask the agent…</span>
+      <span id="agTx" style="position:absolute;left:16px;top:14px;font-size:14px;white-space:nowrap"></span>
+      <div id="agSend" style="position:absolute;right:8px;top:8px;width:32px;height:30px;border-radius:8px;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center">${ic('up', 16)}</div></div>
+  </div>`);
+$('chip').innerHTML = `<div id="chipIn" class="card" style="position:absolute;left:0;top:0;width:100%;height:100%;overflow:hidden;box-shadow:0 1px 2px rgba(16,40,90,.06),0 10px 28px -8px rgba(16,40,90,.18)">
+  <div class="row" style="position:absolute;left:14px;top:11px;white-space:nowrap"><div class="ibox dk">${ic('file', 16)}</div><div><div class="t14">Payout_Policy_v3.pdf</div><div id="chipMeta" class="t13 mute" style="font-size:12px;line-height:14px">PDF · 1.2 MB</div></div></div>
+  <div id="chipStat" class="t13 row" style="position:absolute;right:14px;top:19px;gap:6px;white-space:nowrap;color:var(--mute)">
+    <div style="width:120px;height:4px;border-radius:2px;background:var(--fill);overflow:hidden"><div id="chipBar" style="height:100%;background:var(--ink);width:0"></div></div>
+    <span id="chipTxt">Indexing</span></div></div>`;
+
+/* 5 · cited source */
+layer('src', 560, 360, 0, 0, `
+  <div class="row" style="position:absolute;left:22px;top:18px"><div class="ibox">${ic('file', 16)}</div><div class="t14">Payout_Policy_v3.pdf</div></div>
+  <div class="chip ol" style="position:absolute;right:20px;top:21px">Page 4</div>
+  <div style="position:absolute;left:0;right:0;top:68px;border-top:1px solid var(--line2)"></div>
+  <div style="position:absolute;left:22px;top:90px;width:516px;font-size:14px;line-height:22px">
+    <div class="mute" style="padding:8px 12px">4.1 Payout files are received daily from the settlement bank.</div>
+    <div style="position:relative;padding:8px 12px;margin:2px 0">
+      <div id="srcHi" style="position:absolute;left:0;top:0;bottom:0;background:var(--accentSoft);border-radius:6px"></div>
+      <div id="srcBar" style="position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--accent);border-radius:1px"></div>
+      <div style="position:relative;color:var(--ink);font-weight:500">4.2 Payouts must settle by T+1, the next business day after approval.</div></div>
+    <div class="mute" style="padding:8px 12px">4.3 Exceptions need Finance approval before any ledger change.</div></div>
+  <div style="position:absolute;left:0;right:0;top:290px;border-top:1px solid var(--line2)"></div>
+  <div class="t13 mute" style="position:absolute;left:22px;top:312px">Source 1 · cited in answer</div>
+  <div id="srcAdd" class="btn dk" style="position:absolute;right:16px;top:304px">${ic('flow', 15)}Add to workflow</div>`);
+
+/* 6 · workflow */
+const NX = [28, 236, 444, 652, 860], NW = 172, NH = 64, RT = 150, RM = 260, RB = 370;
+const WN = {
+  n1: [NX[0], RM, 'zap', 'New payout file', 'Trigger · Webhook'],
+  n2: [NX[1], RM, 'spark', 'Operations agent', 'Match against Records', 1],
+  n3: [NX[2], RM, 'split', 'Exceptions found?', 'Decision'],
+  n4: [NX[3], RT, 'user', 'Finance approval', 'Human review'],
+  n5: [NX[4], RT, 'db', 'Update ledger', 'ERP · Action'],
+  n6: [NX[3], RB, 'flag', 'Log and close', 'No exceptions'],
+};
+const N2F = [540, 72]; // where the agent node lands from the source card
+layer('wf', 1060, 520, 0, 0, `
+  <svg width="1060" height="520" style="position:absolute;left:0;top:0"><defs><pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="#CBD7EA"/></pattern></defs>
+    <rect x="0" y="52" width="1060" height="468" fill="url(#dots)"/>
+    ${['e12', 'e23', 'e3y', 'e3n', 'e45'].map(e => `<path id="${e}" fill="none" stroke="#9AA6B8" stroke-width="1.5"/><path id="${e}r" fill="none" stroke="var(--ink)" stroke-width="2" pathLength="1" stroke-dasharray="1 1"/>`).join('')}
+    <circle id="tok" r="5" fill="var(--accent)"/></svg>
+  <div style="position:absolute;left:0;top:0;right:0;height:52px;background:#fff;border-bottom:1px solid var(--line2);display:flex;align-items:center;padding:0 20px;gap:8px;font-size:14px">
+    <span class="mute">Workflows</span><span class="faint">${ic('chev', 14)}</span><b style="font-weight:600">Payout exception handling</b>
+    <div style="position:relative;margin-left:10px;width:120px;height:26px">
+      <div id="wfSt0" class="chip ol" style="position:absolute;left:0;top:0">Draft</div>
+      <div id="wfSt1" class="chip ol" style="position:absolute;left:0;top:0"><span style="width:6px;height:6px;border-radius:50%;background:var(--accent)"></span>Running</div>
+      <div id="wfSt2" class="chip dk" style="position:absolute;left:0;top:0">${ic('check', 13)}Completed · 4.2s</div></div>
+    <div id="wfRun" class="btn dk" style="position:absolute;right:16px;top:10px">${ic('play', 13, 'style="fill:#fff;stroke:none"')}Test run</div></div>
+  <div id="n4g" style="position:absolute;left:${WN.n4[0]}px;top:${WN.n4[1]}px;width:${NW}px;height:${NH}px;border:1.5px dashed #AFC0DC;border-radius:12px"></div>
+  ${Object.entries(WN).map(([k, n]) => `<div id="${k}" class="node" style="left:${n[0]}px;top:${n[1]}px"><div class="ibox ${n[5] ? 'dk' : ''}">${ic(n[2], 15)}</div><div><b>${n[3]}</b><span id="${k}s">${n[4]}</span></div>
+     <div class="port" style="left:-5px;top:27px"></div><div class="port" style="right:-5px;top:27px"></div>
+     <div id="${k}b" class="badge">${ic('check', 11, 'style="stroke-width:2.4"')}</div></div>`).join('')}
+  <div id="n4w" class="abs row" style="left:${WN.n4[0] + 12}px;top:${WN.n4[1] + 72}px;gap:8px">
+    <div class="chip ol">${ic('hour', 13)}Awaiting</div><div id="wfAppr" class="chip dk" style="height:26px">Approve</div></div>
+  <div id="pl2" class="plus" style="left:${NX[1] + NW + 11}px;top:${RM + 21}px">${ic('plus', 13)}</div>
+  <div id="pl4" class="plus" style="left:${NX[3] + NW + 11}px;top:${RT + 21}px">${ic('plus', 13)}</div>
+  <div id="ly" class="elabel" style="left:${NX[2] + NW + 26}px;top:212px">Yes</div>
+  <div id="ln" class="elabel" style="left:${NX[2] + NW + 28}px;top:350px">No</div>
+  <div id="p3" class="abs" style="left:${NX[2] + NW - 5}px;top:${RM + 27}px;width:10px;height:10px"></div>`);
+
+/* 7 · surfaces */
+layer('chat', 600, 500, 0, 30, `
+  <div class="row" style="position:absolute;left:20px;top:16px"><div class="ibox dk" style="width:32px;height:32px;border-radius:50%">${ic('spark', 16)}</div><div class="t14">Ask Frontera</div><div class="chip ol" style="height:24px">Operations agent</div></div>
+  <div style="position:absolute;left:0;right:0;top:64px;border-top:1px solid var(--line2)"></div>
+  <div id="chQ" style="position:absolute;right:20px;top:88px;background:var(--ink);color:#fff;border-radius:14px 14px 4px 14px;padding:10px 14px;font-size:14px;white-space:nowrap">What happened with yesterday’s payouts?</div>
+  <div id="chA" style="position:absolute;left:20px;top:150px;width:500px">
+    <div style="font-size:15px;line-height:24px">Reconciled 1,284 payouts. 3 exceptions flagged. Finance approved <b style="font-weight:600">TX-20931</b> and the ledger is updated; 2 remain open.</div>
+    <div class="row" style="gap:8px;margin-top:12px"><div class="chip ol"><b style="font-weight:600">1</b>Payout_Policy_v3.pdf</div><div class="chip ol"><b style="font-weight:600">2</b>Run #1042</div></div></div>
+  <div class="card" style="position:absolute;left:20px;right:20px;bottom:20px;height:48px"><span class="faint" style="position:absolute;left:16px;top:14px;font-size:14px">Reply…</span>
+    <div style="position:absolute;right:8px;top:8px;width:32px;height:30px;border-radius:8px;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center">${ic('up', 16)}</div></div>`);
+const APPROWS = [['TX-20931', 'Rp 48.2M', 'T+2', 'Approved'], ['TX-20944', 'Rp 51.7M', 'T+2', 'Pending'], ['TX-21007', 'Rp 32.5M', 'T+3', 'Pending']];
+layer('app', 720, 460, 0, 30, `
+  <div style="position:absolute;left:24px;top:20px"><div class="tt" style="font-size:21px;font-weight:600;line-height:28px">Payout Exceptions</div><div class="t13 mute">App · Finance Ops</div></div>
+  <div class="btn ol" style="position:absolute;right:24px;top:26px">${ic('spark', 15)}Ask agent</div>
+  ${[['Flagged', '3'], ['At risk', 'Rp 132.4M'], ['Approved', '1 of 3']].map((k, i) => `
+    <div id="apK${i}" class="card" style="position:absolute;left:${24 + i * 232}px;top:88px;width:216px;height:78px;padding:14px 16px;background:var(--fill);border-color:var(--line2)">
+      <div class="t13 mute">${k[0]}</div><div class="tt" style="font-size:24px;font-weight:600;line-height:30px;margin-top:2px">${k[1]}</div></div>`).join('')}
+  <div class="t13 faint" style="position:absolute;left:24px;top:190px;width:672px;height:32px;display:flex;align-items:center;border-bottom:1px solid var(--line2)">
+    <span style="width:200px">Payout</span><span style="width:180px">Amount</span><span style="width:140px">Settled</span><span>Status</span></div>
+  ${APPROWS.map((r, i) => `<div id="apR${i}" style="position:absolute;left:24px;top:${222 + i * 54}px;width:672px;height:54px;display:flex;align-items:center;border-bottom:1px solid var(--line2);font-size:14px">
+    <span style="width:200px;font-weight:500">${r[0]}</span><span style="width:180px">${r[1]}</span><span style="width:140px" class="mute">${r[2]}</span>
+    <span class="chip ${r[3] === 'Approved' ? 'dk' : 'ol'}">${r[3] === 'Approved' ? ic('check', 12) : ic('hour', 12)}${r[3]}</span></div>`).join('')}`);
+layer('chan', 340, 560, 0, 30, `
+  <div style="position:absolute;left:0;top:0;right:0;height:72px;background:#fff;border-bottom:1px solid var(--line2)">
+    <div class="row" style="position:absolute;left:14px;top:18px;gap:10px">${ic('back', 18)}<div class="ibox dk" style="width:34px;height:34px;border-radius:50%">${ic('spark', 16)}</div>
+      <div><div class="t14" style="font-weight:600">Frontera Ops</div><div class="mute" style="font-size:12px">via WhatsApp</div></div></div></div>
+  <div class="faint" style="position:absolute;left:0;right:0;top:92px;text-align:center;font-size:11.5px">Today</div>
+  <div id="cnQ" style="position:absolute;right:14px;top:120px;background:var(--ink);color:#fff;border-radius:16px 16px 4px 16px;padding:10px 14px;font-size:14px">Status of TX-20944?</div>
+  <div id="cnA" style="position:absolute;left:14px;top:176px;width:250px;background:#fff;border:1px solid var(--line);border-radius:16px 16px 16px 4px;padding:11px 14px;font-size:14px;line-height:21px">Settled T+2, outside policy §4.2. I’ve sent it to Finance for approval.</div>
+  <div id="cnC" class="row" style="position:absolute;left:14px;top:290px;gap:8px"><div class="chip ol" style="border-radius:13px">Open in App</div><div class="chip ol" style="border-radius:13px">Notify me</div></div>
+  <div style="position:absolute;left:14px;right:14px;bottom:16px;height:44px;border-radius:22px;background:#fff;border:1px solid var(--line)"><span class="faint" style="position:absolute;left:16px;top:12px;font-size:14px">Message</span></div>`);
+const APILINES = ['{ "status": "completed",', '  "exceptions": 3,', '  "approval": "required",', '  "citations": ["Payout_Policy_v3.pdf#4.2"] }'];
+layer('api', 720, 320, 0, 30, `
+  <div class="row" style="position:absolute;left:22px;top:18px;gap:10px;font-size:14px;color:#E8EDF6">
+    <span style="background:#1F2737;color:#fff;border-radius:6px;padding:3px 8px;font-size:12px;font-weight:600">POST</span>/v1/agents/operations-agent/runs</div>
+  <div id="apiSend" class="btn" style="position:absolute;right:16px;top:13px;background:#fff;color:var(--ink)">Send ${ic('up', 14)}</div>
+  <div style="position:absolute;left:0;right:0;top:62px;border-top:1px solid #1E2533"></div>
+  <div style="position:absolute;left:22px;top:80px;font-size:14.5px;line-height:24px;white-space:pre;color:#AEB9CC">{ "input": "Reconcile yesterday’s payouts" }</div>
+  <div id="apiOk" class="row" style="position:absolute;left:22px;top:122px;gap:8px;font-size:12.5px;color:#7F8BA0"><span style="width:6px;height:6px;border-radius:50%;background:#fff"></span>200 OK · streamed</div>
+  ${APILINES.map((l, i) => `<div id="apiL${i}" style="position:absolute;left:22px;top:${152 + i * 26}px;font-size:14.5px;line-height:24px;white-space:pre;color:#F2F5FA">${l}</div>`).join('')}`);
+
+/* switcher */
+const SW = [['msg', 'Chat', 92], ['apps', 'App', 86], ['phone', 'Channel', 116], ['code', 'API', 82]];
+const SWW = SW.reduce((a, b) => a + b[2], 0) + 10;
+$('switch').style.width = SWW + 'px';
+$('switch').innerHTML = `<div id="swInd"></div>` + SW.map((s, i) => `<div id="sw${i}" class="swT" style="left:${5 + SW.slice(0, i).reduce((a, b) => a + b[2], 0)}px;width:${s[2]}px">${ic(s[0], 15)}${s[1]}</div>`).join('');
+const SWY = -298;
+
+/* captions (script VO, condensed for on-screen reading) */
+const CAPS = [
+  ['Work is complex. Your AI platform shouldn’t be.', .3, B(3, 4.5)],
+  ['Agents, Apps, workflows and Blueprints on one shared foundation.', B(4, 1) + .25, B(7, 4.5)],
+  ['Agents grounded in your knowledge, answering with citations.', B(8, 1) + .25, B(12, 4.5)],
+  ['Workflows that connect models, tools, decisions and people.', B(13, 1) + .25, B(17, 4.5)],
+  ['Intelligence wherever work happens: Chat, Apps, channels and APIs.', B(18, 1) + .25, B(21, 4.5)],
+  ['From individual tasks to connected, governed operations.', B(22, 1) + .25, B(23, 1)],
+];
+$('caps').innerHTML = CAPS.map((c, i) => `<div id="cap${i}" class="cap">${c[0]}</div>`).join('');
+
+/* ───────── timeline ───────── */
+const SFX = [];
+const sfx = (t, type, gain = 1) => SFX.push({ t: +t.toFixed(4), type, gain });
+let H, CAM, CUR, DRAG = {}, TAB, SWT, TOG, END, TL;
+
+function build() {
+  /* positions measured from layout */
+  const tileC = i => A('shPlus' + i), dropC = A('agDrop'), sendC = A('agSend'), citeC = A('agCite', .3);
+  const ww = $('endWord').offsetWidth, gw = 96 + 28 + ww;
+  END = { tile: [-gw / 2 + 48, -26], word: [-gw / 2 + 124, -26 - 48], tagW: $('endTag').offsetWidth };
+  const wfOrg = [-530, -260]; const wf = (x, y) => [wfOrg[0] + x, wfOrg[1] + y];
+
+  TL = {
+    fragIn: B(1, 2), press1: B(2, 3), rel1: B(3, 1), bar: B(3, 2), typeA: B(3, 3), typeB: B(3, 4.5),
+    shell: B(4, 1), add: [B(4, 3), B(5, 1), B(5, 3), B(6, 1)], strip: B(6, 3), tog: B(7, 1), chips: [B(7, 1.5), B(7, 2), B(7, 2.5), B(7, 3)],
+    agent: B(8, 1), tabK: B(8, 3), chipIn: B(8, 4), dragP: B(9, 1), dragR: B(9, 3), idx: B(9, 4.5),
+    tabT: B(10, 1), qA: B(10, 1) + .15, qB: B(10, 2.75), send: B(10, 3), steps: [B(10, 4), B(11, 1), B(11, 2)], ans: B(11, 3),
+    cite: B(12, 1), hi: B(12, 2), wf: B(13, 1), nP: B(13, 3), nR: B(14, 1), pl2: B(14, 3), br: B(14, 4), eP: B(15, 1), eR: B(15, 3), pl4: B(15, 4),
+    run: B(16, 1), r: [B(16, 2), B(16, 3), B(16, 4)], appr: B(17, 1), r5: B(17, 2), done: B(17, 3),
+    chat: B(18, 1), app: B(19, 1), chan: B(20, 1), api: B(21, 1), send2: B(21, 3), resolve: B(22, 1), word: B(22, 3), tag: B(23, 1), out: B(24, 2),
+  };
+  const T = TL;
+
+  /* hero: one shape, never cut */
+  const HK = [
+    [T.fragIn, 0, 0, 14, 14, 7, '#0A0A0A', 0],
+    [T.bar, 0, 0, 560, 64, 32, '#FFFFFF', 1],
+    [T.shell, 0, 0, 1000, 532, 20, '#FFFFFF', 1],
+    [T.agent, 0, 0, 760, 540, 20, '#FFFFFF', 1],
+    [T.cite, 0, 0, 560, 360, 18, '#FFFFFF', 1],
+    [T.wf, 0, 0, 1060, 520, 18, '#FFFFFF', 1],
+    [T.chat, 0, 30, 600, 500, 20, '#FFFFFF', 1],
+    [T.app, 0, 30, 720, 460, 18, '#FFFFFF', 1],
+    [T.chan, 0, 30, 340, 560, 36, '#F3F6FB', 1],
+    [T.api, 0, 30, 720, 320, 16, '#0B0F17', 0],
+    [T.resolve, END.tile[0], END.tile[1], 96, 96, 24, '#FFFFFF', 1],
+    [T.out, 0, 0, 120, 120, 30, '#FFFFFF', 1],
+  ];
+  H = { x: track(0, 13), y: track(0, 13), w: track(120, 13), h: track(120, 13), r: track(30, 13), c: [0, 1, 2].map(i => track(255, 16, 1)), b: track(1, 16, 1) };
+  for (const k of HK) {
+    const t = k[0], c = hex(k[6]);
+    H.x.to(t, k[1]); H.y.to(t, k[2]); H.w.to(t, k[3]); H.h.to(t, k[4]); H.r.to(t, k[5]);
+    c.forEach((v, i) => H.c[i].to(t, v)); H.b.to(t, k[7]);
+    sfx(t, 'morph', .8);
+  }
+
+  /* camera: zooms so each state fills the frame */
+  const CK = [[T.fragIn, 0, 0, 1], [T.bar, 0, 0, 1.5], [T.shell, 0, 0, 1.25], [T.agent, 0, 0, 1.4], [T.tabK, 150, 0, 1.18], [T.idx, 0, 0, 1.4],
+    [T.cite, 0, 0, 1.6], [T.wf, 0, 0, 1.27], [T.chat, 0, 2, 1.22], [T.resolve, 0, 0, 1.3], [T.out, 0, 0, 1.6]];
+  CAM = { x: track(0, 7.5, .97), y: track(0, 7.5, .97), lz: track(Math.log(1.6), 7.5, .97) };
+  for (const k of CK) { const w = k[0] === T.out ? 10 : undefined; CAM.x.to(k[0], k[1], w); CAM.y.to(k[0], k[2], w); CAM.lz.to(k[0], Math.log(k[3]), w); }
+
+  /* cursor: real clicks and drags */
+  const PARK = [228, 196];
+  const WP = []; // [tArrive, x, y, lead?, w?]
+  const PR = []; // press intervals
+  const click = (t, p, type = 'click') => { WP.push([t, p[0], p[1]]); PR.push([t, t + .09]); sfx(t, type); };
+  WP.push([T.press1, 0, 0]); PR.push([T.press1, T.rel1]); sfx(T.press1, 'click'); sfx(T.rel1, 'release');
+  WP.push([T.bar + .25, 150, 70]);
+  for (let i = 0; i < 18; i += 2) sfx(lerp(T.typeA, T.typeB, i / 18), 'type', .5);
+  click(T.shell, [140, 2]);
+  T.add.forEach((t, i) => { click(t, tileC(i)); sfx(t + .03, 'pop', .8); });
+  click(T.tog, A('shTog')); T.chips.forEach(t => sfx(t, 'tick', .55));
+  click(T.agent, A('shTile0', .25, .4));
+  click(T.tabK, A('agT1'));
+  const chipRest = [560, 34];
+  WP.push([T.dragP, chipRest[0] - 40, chipRest[1] + 2]); PR.push([T.dragP, T.dragR]); sfx(T.dragP, 'click');
+  WP.push([T.dragR, dropC[0] - 160, dropC[1], .8, 6.5]); sfx(T.dragR, 'snap');
+  sfx(T.chipIn, 'pop', .7); sfx(T.idx, 'tick', .8);
+  click(T.tabT, A('agT2'));
+  WP.push([T.qA, sendC[0] - 90, sendC[1] + 40]);
+  for (let i = 0; i < 36; i += 2) sfx(lerp(T.qA, T.qB, i / 36), 'type', .5);
+  click(T.send, sendC);
+  T.steps.forEach((t, i) => { sfx(t, 'tick', .6); });
+  sfx(T.ans, 'pop', .8);
+  click(T.cite, citeC);
+  sfx(T.hi, 'tick', .6);
+  const srcAdd = A('srcAdd'); click(T.wf, srcAdd);
+  const n2f = wf(N2F[0] + 60, N2F[1] + 32), n2s = wf(NX[1] + 60, RM + 32);
+  WP.push([T.nP, n2f[0], n2f[1]]); PR.push([T.nP, T.nR]); sfx(T.nP, 'click');
+  WP.push([T.nR, n2s[0], n2s[1], .8, 6.5]); sfx(T.nR, 'snap');
+  click(T.pl2, wf(NX[1] + NW + 22, RM + 32)); sfx(T.pl2 + .03, 'pop', .8); sfx(T.br, 'pop', .6);
+  const p3 = wf(NX[2] + NW, RM + 32), n4in = wf(NX[3] + 4, RT + 32);
+  WP.push([T.eP, p3[0], p3[1]]); PR.push([T.eP, T.eR]); sfx(T.eP, 'click');
+  WP.push([T.eR, n4in[0] + 30, n4in[1] + 4, .8, 6.5]); sfx(T.eR, 'snap');
+  WP.push([T.pl4, ...wf(NX[3] + NW + 22, RT + 32), .38]); PR.push([T.pl4, T.pl4 + .09]); sfx(T.pl4, 'click'); sfx(T.pl4 + .03, 'pop', .8);
+  click(T.run, A('wfRun'));
+  T.r.forEach(t => sfx(t, 'tick', .7));
+  click(T.appr, A('wfAppr')); sfx(T.appr + .05, 'success', .8); sfx(T.r5, 'tick', .7); sfx(T.done, 'success', .6);
+  click(T.chat, wf(NX[1] + 70, RM + 32));
+  sfx(T.chat + BEAT, 'pop', .6); sfx(T.chat + 2 * BEAT, 'pop', .7);
+  const swX = i => -SWW / 2 + 5 + SW.slice(0, i).reduce((a, b) => a + b[2], 0) + SW[i][2] / 2;
+  click(T.app, [swX(1), SWY + 22]); click(T.chan, [swX(2), SWY + 22]); click(T.api, [swX(3), SWY + 22]);
+  [1, 2, 3].forEach(i => sfx(T.app + i * BEAT * .5, 'tick', .4));
+  sfx(T.chan + BEAT, 'pop', .6); sfx(T.chan + 2 * BEAT, 'pop', .7);
+  click(T.send2, A('apiSend'));
+  APILINES.forEach((l, i) => sfx(T.send2 + (i + 1) * BEAT / 4, 'type', .6));
+  click(T.resolve, [40, 60]);
+  WP.push([T.word, ...PARK, .55, 8]);
+  sfx(T.word, 'pop', .5); sfx(T.tag, 'tick', .4);
+  CUR = { x: track(PARK[0], 11, .9), y: track(PARK[1], 9.5, .9), PR };
+  WP.sort((a, b) => a[0] - b[0]);
+  let prev = -1;
+  for (const p of WP) {
+    const lead = Math.min(p[3] || .55, p[0] - prev - .06);
+    CUR.x.to(p[0] - lead, p[1], p[4] || 11, .9); CUR.y.to(p[0] - lead, p[2], (p[4] || 11) * .86, .9);
+    prev = p[0];
+  }
+  const cur = t => [CUR.x(t), CUR.y(t)];
+
+  /* drags: value follows the cursor while held, springs from wherever it was on release */
+  function drag(rest, tp, tr, target, w = 15, z = .82) {
+    const r0 = rest(tp), c0 = cur(tp), off = [r0[0] - c0[0], r0[1] - c0[1]];
+    const c1 = cur(tr), rel = [c1[0] + off[0], c1[1] + off[1]];
+    return t => {
+      if (t < tp) return rest(t);
+      if (t < tr) { const c = cur(t); return [c[0] + off[0], c[1] + off[1]]; }
+      const s = S(t - tr, w, z); return [lerp(rel[0], target[0], s), lerp(rel[1], target[1], s)];
+    };
+  }
+  const chipLand = [dropC[0], dropC[1] - 8];
+  DRAG.chip = drag(() => chipRest, T.dragP, T.dragR, chipLand);
+  DRAG.n2 = drag(() => wf(N2F[0] + NW / 2, N2F[1] + NH / 2), T.nP, T.nR, wf(NX[1] + NW / 2, RM + NH / 2));
+  DRAG.edge = drag(() => p3, T.eP, T.eR, wf(NX[3], RT + 32));
+
+  /* tab indicators: two edges on different springs, leading edge runs ahead */
+  function edges(list, x0, w0) {
+    const L = track(x0), R = track(x0 + w0);
+    let pl = x0;
+    for (const [t, x, w] of list) {
+      const right = x > pl; L.to(t, x, right ? 11 : 20, .9); R.to(t, x + w, right ? 20 : 11, .9); pl = x;
+    }
+    return t => [L(t), R(t)];
+  }
+  const agX = i => 3 + AG_TABS.slice(0, i).reduce((a, b) => a + b[1], 0);
+  TAB = edges([[T.tabK, agX(1), AG_TABS[1][1]], [T.tabT, agX(2), AG_TABS[2][1]]], agX(0), AG_TABS[0][1]);
+  const swx = i => 5 + SW.slice(0, i).reduce((a, b) => a + b[2], 0);
+  SWT = edges([[T.app, swx(1), SW[1][2]], [T.chan, swx(2), SW[2][2]], [T.api, swx(3), SW[3][2]]], swx(0), SW[0][2]);
+  TOG = edges([[T.tog, 23, 20]], 3, 20);
+  window.SFX = SFX.sort((a, b) => a.t - b.t);
+}
+
+/* ───────── seek(t): every style is a pure function of time ───────── */
+const px = v => v.toFixed(2) + 'px';
+function seek(tIn) {
+  const t = ((tIn % DUR) + DUR) % DUR, T = TL;
+  /* camera */
+  const z = Math.exp(CAM.lz(t)), cx = CAM.x(t), cy = CAM.y(t);
+  $('world').style.transform = `translate(${px(SCX - cx * z)},${px(SCY - cy * z)}) scale(${z.toFixed(5)})`;
+  const toScreen = (x, y) => [SCX + (x - cx) * z, SCY + (y - cy) * z];
+
+  /* hero */
+  const hw = H.w(t), hh = H.h(t), hx = H.x(t), hy = H.y(t);
+  const pressHero = .035 * pulse(t, T.resolve) + .02 * pulse(t, T.shell);
+  const hs = hero.style;
+  hs.width = px(hw); hs.height = px(hh); hs.borderRadius = px(Math.min(H.r(t), hw / 2, hh / 2));
+  hs.transformOrigin = `${px(hw / 2)} ${px(hh / 2)}`;
+  hs.transform = `translate(${px(hx - hw / 2)},${px(hy - hh / 2)}) scale(${(1 - pressHero).toFixed(4)})`;
+  const c = H.c.map(f => clamp(Math.round(f(t)), 0, 255)), ba = clamp(H.b(t));
+  hs.background = `rgb(${c})`; hs.borderColor = `rgba(214,224,239,${ba.toFixed(3)})`;
+  hs.boxShadow = `0 1px 2px rgba(16,40,90,${(.06 * ba).toFixed(3)}),0 14px 36px -10px rgba(16,40,90,${(.16 * ba).toFixed(3)})`;
+
+  /* content layers swap with a short blur, entering after the old one leaves */
+  const IN = .1;
+  const L = (k, ivs) => show(LAY[k].el, V(t, ivs), '', 0, .015);
+  L('mark', [[null, T.fragIn], [T.resolve + IN, null]]);
+  L('bar', [[T.bar + IN, T.shell]]);
+  L('shell', [[T.shell + IN, T.agent]]);
+  L('agent', [[T.agent + IN, T.cite]]);
+  L('src', [[T.cite + IN, T.wf]]);
+  L('wf', [[T.wf + IN, T.chat]]);
+  L('chat', [[T.chat + IN, T.app]]);
+  L('app', [[T.app + IN, T.chan]]);
+  L('chan', [[T.chan + IN, T.api]]);
+  L('api', [[T.api + IN, T.resolve]]);
+
+  /* fragments: converge into the shape */
+  FR.forEach((f, i) => {
+    const el = $('fr' + i), tin = f[5] + (i % 2) * BEAT / 2;
+    const hold = .14 * S(t - T.press1, 5, 1);
+    const conv = S(t - (T.rel1 + i * BEAT / 8), 12, .92);
+    const k = (1 - hold) * (1 - conv);
+    const x = f[3] * k + 4 * Math.sin(t * 1.3 + i * 1.7) * (1 - conv), y = f[4] * k + 5 * Math.sin(t * 1.1 + i * 2.3) * (1 - conv);
+    const p = V(t, [[tin, null]]) * (1 - clamp(conv * 1.25));
+    const sc = lerp(1, .25, conv);
+    el.style.opacity = p.toFixed(4); el.style.visibility = p < .002 ? 'hidden' : 'visible';
+    const b = (1 - V(t, [[tin, null]])) * 7; el.style.filter = b > .05 ? `blur(${b.toFixed(2)}px)` : 'none';
+    el.style.transform = `translate(${px(x)},${px(y)}) translate(-50%,-50%) scale(${(1.32 * sc * (1 - .05 * (1 - V(t, [[tin, null]])))).toFixed(4)})`;
+  });
+
+  /* ask bar typing */
+  const q1 = 'Put agents to work';
+  const tx = typed(t, q1, T.typeA, T.typeB);
+  $('barTx').textContent = tx; $('barPh').style.opacity = tx ? 0 : 1;
+  const tw = $('barTx').offsetWidth;
+  $('barCaret').style.left = px(32 + tw + 2);
+  $('barCaret').style.opacity = (t > T.typeA - .3 && (t < T.typeB + .05 || Math.floor((t - T.typeB) / .5) % 2 === 1)) ? 1 : 0;
+
+  /* shell */
+  for (let i = 0; i < 4; i++) {
+    const ta = T.add[i];
+    show($('shEmpty' + i), 1 - S(t - ta, 34, 1), '', 0, 0, 5);
+    show($('shFull' + i), V(t, [[ta + .04, null]]), '', 6, .03);
+    $('shPlus' + i).style.transform = `scale(${(1 - .12 * pulse(t, ta)).toFixed(4)})`;
+    show($('shCh' + i), V(t, [[T.chips[i], null]]), '', 4, .05, 4);
+  }
+  show($('shStrip'), V(t, [[T.strip, null]]), '', 10, .02);
+  const tg = TOG(t), on = S(t - T.tog, 16, 1);
+  const k0 = Math.min(tg[0], tg[1] - 20), k1 = Math.max(tg[1], k0 + 20);
+  $('shKnob').style.left = px(k0); $('shKnob').style.width = px(k1 - k0);
+  $('shTog').style.background = `rgb(${[lerp(196, 13, on), lerp(208, 106, on), lerp(226, 243, on)].map(Math.round)})`;
+  $('shTogL').textContent = on > .5 ? 'Connected' : 'Connect'; $('shTogL').style.color = on > .5 ? 'var(--ink)' : 'var(--mute)';
+
+  /* agent */
+  const ag = TAB(t); $('agInd').style.left = px(ag[0]); $('agInd').style.width = px(ag[1] - ag[0]);
+  const at = t < T.tabK ? 0 : t < T.tabT ? 1 : 2;
+  for (let i = 0; i < 3; i++) $('agT' + i).style.color = i === at ? 'var(--ink)' : 'var(--mute)';
+  show($('agInstr'), V(t, [[null, T.tabK]]), '', 0, 0, 5);
+  show($('agKnow'), V(t, [[T.tabK + IN, T.tabT]]), '', 0, 0, 5);
+  show($('agTest'), V(t, [[T.tabT + IN, null]]), '', 0, 0, 5);
+  $('agKCount').textContent = t < T.dragR ? '2 sources' : '3 sources';
+  const over = S(t - (T.dragR - .25), 30, 1) * (1 - S(t - T.dragR, 30, 1));
+  $('agDrop').style.borderColor = `rgba(${over > .5 ? '10,10,10' : '195,210,234'},1)`;
+  $('agDrop').style.background = over > .02 ? `rgba(242,245,250,${over})` : 'transparent';
+  show($('agDrop'), 1 - S(t - T.dragR, 34, 1), '', 0, 0, 4);
+  /* chip: dragged, then becomes the indexed row */
+  {
+    const p = DRAG.chip(t), land = S(t - T.dragR, 13, .88);
+    const w = lerp(240, 712, land), h = 56;
+    const el = $('chip');
+    const vis = V(t, [[T.chipIn, T.tabT]]);
+    show(el, vis, `translate(${px(p[0] - w / 2)},${px(p[1] - h / 2)})`, 0, 0, 6);
+    el.style.width = px(w); el.style.height = px(h);
+    const held = t >= T.dragP && t < T.dragR ? 1 : 0;
+    const lift = S(t - T.dragP, 20, 1) * (1 - S(t - T.dragR, 20, 1));
+    $('chipIn').style.transform = `rotate(${(lift * -2).toFixed(3)}deg) scale(${(1 + .03 * lift).toFixed(4)})`;
+    $('chipIn').style.boxShadow = `0 1px 2px rgba(16,40,90,.06),0 ${px(10 + 14 * lift)} ${px(28 + 20 * lift)} -8px rgba(16,40,90,${(.14 + .1 * lift).toFixed(3)})`;
+    const ip = clamp((t - (T.dragR + .15)) / (T.idx - T.dragR - .15));
+    $('chipBar').style.width = (ip * 100).toFixed(1) + '%';
+    $('chipTxt').textContent = t < T.idx ? 'Indexing' : 'Indexed · 42 passages';
+    $('chipBar').parentNode.style.display = t < T.idx ? 'block' : 'none';
+    $('chipStat').style.opacity = clamp(land * 1.4 - .3);
+    $('chipMeta').textContent = t < T.dragR ? 'PDF · 1.2 MB' : 'Added just now';
+  }
+  const qt = typed(t, 'Which payouts breach the T+1 policy?', T.qA, T.qB);
+  const sent = t >= T.send;
+  $('agTx').textContent = sent ? '' : qt; $('agPh').style.opacity = (qt && !sent) ? 0 : 1;
+  $('agSend').style.transform = `scale(${(1 - .12 * pulse(t, T.send)).toFixed(4)})`;
+  show($('agQ'), V(t, [[T.send, null]]), '', 14, .04);
+  for (let i = 0; i < 3; i++) {
+    show($('agS' + i), V(t, [[T.steps[i], null]]), '', 6, 0, 4);
+    const done = S(t - (T.steps[i] + BEAT * .9), 26, 1);
+    $('agSc' + i).style.transform = `scale(${done.toFixed(4)})`;
+    $('agSp' + i).style.transform = `rotate(${(t * 540).toFixed(1)}deg)`; $('agSp' + i).style.opacity = 1 - done;
+  }
+  show($('agAns'), V(t, [[T.ans, null]]), '', 10, 0, 6);
+  $('agCite').style.background = t > T.cite - .25 ? 'var(--fill)' : '#fff';
+
+  /* source highlight */
+  const hi = S(t - T.hi, 9, 1);
+  $('srcHi').style.width = (hi * 100).toFixed(2) + '%'; $('srcBar').style.opacity = hi;
+  $('srcAdd').style.transform = `scale(${(1 - .05 * pulse(t, T.wf)).toFixed(4)})`;
+
+  /* workflow */
+  {
+    const o = [530, 260]; // layer origin offset in world
+    const loc = p => [p[0] + o[0], p[1] + o[1]];
+    const n2 = loc(DRAG.n2(t));
+    const n2el = $('n2'); n2el.style.left = px(n2[0] - NW / 2); n2el.style.top = px(n2[1] - NH / 2);
+    const lift = S(t - T.nP, 20, 1) * (1 - S(t - T.nR, 20, 1));
+    n2el.style.boxShadow = `0 1px 2px rgba(16,40,90,.05),0 ${px(16 * lift)} ${px(30 * lift)} -8px rgba(16,40,90,${(.2 * lift).toFixed(3)})`;
+    n2el.style.transform = `scale(${(1 + .03 * lift).toFixed(4)})`;
+    show($('n1'), 1, '', 0, 0);
+    show($('n3'), V(t, [[T.pl2 + .04, null]]), '', 0, .1, 5);
+    show($('n6'), V(t, [[T.br, null]]), '', 0, .1, 5);
+    show($('n4g'), V(t, [[T.br, T.eR]]), '', 0, .05, 3);
+    show($('n4'), V(t, [[T.eR, null]]), '', 0, .06, 4);
+    show($('n5'), V(t, [[T.pl4 + .04, null]]), '', 0, .1, 5);
+    show($('pl2'), V(t, [[T.nR + .1, T.pl2 + .02]]), `scale(${(1 - .15 * pulse(t, T.pl2)).toFixed(3)})`, 0, .3, 3);
+    show($('pl4'), V(t, [[T.eR + .1, T.pl4 + .02]]), `scale(${(1 - .15 * pulse(t, T.pl4)).toFixed(3)})`, 0, .3, 3);
+    show($('ly'), V(t, [[T.eR, null]]), '', 0, .1, 3);
+    show($('ln'), V(t, [[T.br, null]]), '', 0, .1, 3);
+    const n2out = [n2[0] + NW / 2, n2[1]];
+    const curve = (a, b) => { const d = Math.max(30, Math.abs(b[0] - a[0]) * .5); return `M${a[0].toFixed(1)} ${a[1].toFixed(1)} C${(a[0] + d).toFixed(1)} ${a[1].toFixed(1)} ${(b[0] - d).toFixed(1)} ${b[1].toFixed(1)} ${b[0].toFixed(1)} ${b[1].toFixed(1)}`; };
+    const E = {
+      e12: [[NX[0] + NW, RM + 32], [n2[0] - NW / 2, n2[1]], T.nR],
+      e23: [n2out, [NX[2], RM + 32], T.pl2],
+      e3n: [[NX[2] + NW, RM + 32], [NX[3], RB + 32], T.br],
+      e3y: [[NX[2] + NW, RM + 32], (() => { const p = loc(DRAG.edge(t)); return [p[0], p[1]]; })(), T.eP],
+      e45: [[NX[3] + NW, RT + 32], [NX[4], RT + 32], T.pl4],
+    };
+    for (const [k, [a, b, t0]] of Object.entries(E)) {
+      const el = $(k), p = k === 'e3y' ? (t >= T.eP ? 1 : 0) : S(t - t0, 14, 1);
+      el.setAttribute('d', curve(a, b)); el.setAttribute('stroke-dasharray', k === 'e3y' ? 'none' : `${p * 400} 400`);
+      el.style.opacity = k === 'e3y' ? (t >= T.eP ? 1 : 0) : (p > .001 ? 1 : 0);
+      $(k + 'r').setAttribute('d', curve(a, b));
+    }
+    /* run */
+    const seq = [['e12r', T.run + .05, T.r[0]], ['e23r', T.r[0], T.r[1]], ['e3yr', T.r[1], T.r[2]], ['e45r', T.appr, T.r5]];
+    let tok = null;
+    for (const [id, a, b] of seq) {
+      const p = clamp((t - a) / (b - a - .05)), el = $(id);
+      const e = p * p * (3 - 2 * p);
+      el.setAttribute('stroke-dashoffset', (1 - e).toFixed(4)); el.style.opacity = t > a ? 1 : 0;
+      if (t > a && p < 1) { const len = el.getTotalLength(); const pt = el.getPointAtLength(len * e); tok = [pt.x, pt.y]; }
+    }
+    $('e3nr').style.opacity = 0;
+    $('tok').setAttribute('cx', tok ? tok[0] : -50); $('tok').setAttribute('cy', tok ? tok[1] : -50);
+    $('tok').style.opacity = tok ? 1 : 0;
+    const badge = (id, tb) => { $(id + 'b').style.transform = `scale(${S(t - tb, 22, .8).toFixed(4)})`; };
+    badge('n1', T.run + .05); badge('n2', T.r[0]); badge('n3', T.r[1]); badge('n4', T.appr); badge('n5', T.r5); $('n6b').style.transform = 'scale(0)';
+    $('n2s').textContent = t >= T.r[0] + .1 ? '3 exceptions flagged' : 'Match against Records';
+    $('n5s').textContent = t >= T.r5 + .1 ? 'Ledger updated' : 'ERP · Action';
+    const wait = V(t, [[T.r[2], T.appr + .12]]);
+    $('n4').style.borderColor = wait > .5 ? 'var(--accent)' : 'var(--line)';
+    show($('n4w'), wait, '', -6, 0, 4);
+    $('wfAppr').style.transform = `scale(${(1 - .1 * pulse(t, T.appr)).toFixed(4)})`;
+    $('wfRun').style.transform = `scale(${(1 - .06 * pulse(t, T.run)).toFixed(4)})`;
+    show($('wfSt0'), V(t, [[null, T.run]]), '', 0, 0, 4); show($('wfSt1'), V(t, [[T.run + .06, T.done]]), '', 0, 0, 4); show($('wfSt2'), V(t, [[T.done + .06, null]]), '', 0, 0, 4);
+  }
+
+  /* surfaces */
+  show($('chQ'), V(t, [[T.chat + BEAT, null]]), '', 12, .04); show($('chA'), V(t, [[T.chat + 2 * BEAT, null]]), '', 10, 0, 6);
+  for (let i = 0; i < 3; i++) { show($('apK' + i), V(t, [[T.app + IN + i * BEAT / 4, null]]), '', 8, .02, 5); show($('apR' + i), V(t, [[T.app + BEAT + i * BEAT / 2, null]]), '', 8, 0, 5); }
+  show($('cnQ'), V(t, [[T.chan + BEAT, null]]), '', 12, .04); show($('cnA'), V(t, [[T.chan + 2 * BEAT, null]]), '', 10, .03); show($('cnC'), V(t, [[T.chan + 3 * BEAT, null]]), '', 6, 0, 4);
+  show($('apiOk'), V(t, [[T.send2, null]]), '', 4, 0, 3);
+  APILINES.forEach((l, i) => show($('apiL' + i), V(t, [[T.send2 + (i + 1) * BEAT / 4, null]]), '', 6, 0, 4));
+  $('apiSend').style.transform = `scale(${(1 - .08 * pulse(t, T.send2)).toFixed(4)})`;
+  /* switcher */
+  {
+    const p = V(t, [[T.chat + IN, T.resolve]]);
+    show($('switch'), p, `translate(${px(-SWW / 2)},${px(SWY)})`, 10, .04, 6);
+    const e = SWT(t); $('swInd').style.left = px(e[0]); $('swInd').style.width = px(e[1] - e[0]);
+    const act = t < T.app ? 0 : t < T.chan ? 1 : t < T.api ? 2 : 3;
+    for (let i = 0; i < 4; i++) $('sw' + i).style.color = i === act ? '#fff' : 'var(--ink2)';
+  }
+  /* end card */
+  {
+    const pw = V(t, [[T.word, T.out]]), pt = V(t, [[T.tag, T.out]]);
+    show($('endWord'), pw, `translate(${px(END.word[0] - 16 * (1 - pw))},${px(END.word[1])})`, 0, 0, 10);
+    show($('endTag'), pt, `translate(${px(-END.tagW / 2)},${px(64)})`, 10, 0, 8);
+  }
+  /* captions */
+  CAPS.forEach((cp, i) => show($('cap' + i), V(t, [[cp[1], cp[2]]]), '', 14, 0, 8));
+
+  /* cursor (screen space, constant size) */
+  {
+    const w = toScreen(CUR.x(t), CUR.y(t));
+    let pr = 0; for (const [a, b] of CUR.PR) pr = Math.max(pr, pulse(t, a, b - a));
+    $('cursor').style.transform = `translate(${px(w[0] - 3)},${px(w[1] - 2)}) scale(${(1 - .14 * pr).toFixed(4)})`;
+  }
+}
+window.ready = document.fonts.ready.then(() => { build(); seek(0); window.DUR = DUR; window.seek = seek; return true; });
+</script>
+</body>
+</html>

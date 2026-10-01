@@ -1,0 +1,4 @@
+stills/
+out/
+*.wav
+out_render.log
